@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate-site:
+    name: Validar site estatico
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar codigo
+        uses: actions/checkout@v4
+
+      - name: Verificar arquivo principal
+        run: test -f site/index.html
+
+      - name: Validar conteudo minimo
+        run: grep -q "Meu deploy automatizado" site/index.html
+
+      - name: Publicar artefato do site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-estatico
+          path: site/
