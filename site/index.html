@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Meu deploy automatizado</title>
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       :root {
         color-scheme: light;
         font-family: Arial, Helvetica, sans-serif;
@@ -15,14 +19,17 @@
       body {
         min-height: 100vh;
         margin: 0;
-        display: grid;
-        place-items: center;
       }
 
       main {
-        max-width: 720px;
-        padding: 48px 28px;
-        text-align: center;
+        width: min(1040px, 100%);
+        margin: 0 auto;
+        padding: 48px 24px;
+      }
+
+      header {
+        max-width: 760px;
+        margin-bottom: 32px;
       }
 
       h1 {
@@ -32,15 +39,130 @@
 
       p {
         margin: 0;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         line-height: 1.6;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        min-height: 220px;
+        padding: 24px;
+        border: 1px solid #d8e0ea;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 12px 32px rgb(23 32 51 / 8%);
+      }
+
+      .card h2 {
+        margin: 0 0 18px;
+        font-size: 1.2rem;
+      }
+
+      .metric {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 12px 0;
+        border-top: 1px solid #edf1f6;
+      }
+
+      .metric:first-of-type {
+        border-top: 0;
+      }
+
+      .metric span {
+        color: #5b6677;
+      }
+
+      .metric strong {
+        text-align: right;
+      }
+
+      .status {
+        margin-top: 18px;
+        color: #5b6677;
+        font-size: 0.95rem;
+      }
+
+      .error {
+        color: #a33a2b;
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>Meu deploy automatizado</h1>
-      <p>Esta pagina foi publicada automaticamente com GitHub Actions e GitHub Pages.</p>
+      <header>
+        <h1>Meu deploy automatizado</h1>
+        <p>Esta pagina foi publicada automaticamente com GitHub Actions e GitHub Pages, consumindo dados atualizados da API publica do GitHub.</p>
+      </header>
+
+      <section class="dashboard" aria-label="Metricas do projeto e do ecossistema CI/CD">
+        <article class="card">
+          <h2>Projeto</h2>
+          <div class="metric">
+            <span>Repositorio</span>
+            <strong id="repo-name">Carregando...</strong>
+          </div>
+          <div class="metric">
+            <span>Branch padrao</span>
+            <strong id="repo-branch">Carregando...</strong>
+          </div>
+          <div class="metric">
+            <span>Issues abertas</span>
+            <strong id="repo-issues">Carregando...</strong>
+          </div>
+          <div class="metric">
+            <span>Ultimo push</span>
+            <strong id="repo-pushed">Carregando...</strong>
+          </div>
+          <p class="status" id="repo-status">Buscando dados do repositorio...</p>
+        </article>
+
+        <article class="card">
+          <h2>Ecossistema GitHub Actions</h2>
+          <div class="metric">
+            <span>Repositorios com topic</span>
+            <strong id="actions-total">Carregando...</strong>
+          </div>
+          <div class="metric">
+            <span>Consulta</span>
+            <strong>topic:github-actions</strong>
+          </div>
+          <p class="status" id="actions-status">Buscando metricas publicas de CI/CD...</p>
+        </article>
+      </section>
     </main>
+
+    <script>
+      fetch("https://api.github.com/repos/hermes-augusto/20261-mba-ci-cd")
+        .then((response) => response.json())
+        .then((data) => {
+          document.querySelector("#repo-name").textContent = data.full_name;
+          document.querySelector("#repo-branch").textContent = data.default_branch;
+          document.querySelector("#repo-issues").textContent = data.open_issues_count;
+          document.querySelector("#repo-pushed").textContent = new Date(data.pushed_at).toLocaleString("pt-BR");
+          document.querySelector("#repo-status").textContent = "Dados atualizados pela API do GitHub.";
+        })
+        .catch(() => {
+          document.querySelector("#repo-status").textContent = "Nao foi possivel carregar os dados do repositorio.";
+          document.querySelector("#repo-status").classList.add("error");
+        });
+
+      fetch("https://api.github.com/search/repositories?q=topic:github-actions")
+        .then((response) => response.json())
+        .then((data) => {
+          document.querySelector("#actions-total").textContent = data.total_count;
+          document.querySelector("#actions-status").textContent = "Metrica atualizada pela busca publica do GitHub.";
+        })
+        .catch(() => {
+          document.querySelector("#actions-status").textContent = "Nao foi possivel carregar a metrica de CI/CD.";
+          document.querySelector("#actions-status").classList.add("error");
+        });
+    </script>
   </body>
 </html>
